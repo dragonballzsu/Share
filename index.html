@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Encrypted & Unencrypted File/Text Share</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+</head>
+<body>
+    <h2>Encrypt and Share</h2>
+    <textarea id="text" placeholder="Enter text to encrypt"></textarea><br>
+    <input type="file" id="fileInput"><br>
+    <input type="password" id="password" placeholder="Enter encryption key"><br>
+    <button onclick="encryptText()">Encrypt Text</button>
+    <button onclick="encryptFile()">Encrypt File</button>
+    <button onclick="shareUnencryptedText()">Share Unencrypted Text</button>
+    <button onclick="shareUnencryptedFile()">Share Unencrypted File</button>
+    <p id="encryptedText"></p>
+    <a id="downloadEncryptedLink" style="display:none">Download Encrypted File</a>
+    <a id="downloadUnencryptedLink" style="display:none">Download Unencrypted File</a>
+
+    <h2>Decrypt</h2>
+    <textarea id="encryptedInput" placeholder="Paste encrypted text here"></textarea><br>
+    <input type="password" id="decryptPassword" placeholder="Enter decryption key"><br>
+    <button onclick="decryptText()">Decrypt Text</button>
+    <p id="decryptedText"></p>
+
+    <script>
+        function encryptText() {
+            let text = document.getElementById("text").value;
+            let password = document.getElementById("password").value;
+            let encrypted = CryptoJS.AES.encrypt(text, password).toString();
+            document.getElementById("encryptedText").innerText = encrypted;
+        }
+        
+        function encryptFile() {
+            let fileInput = document.getElementById("fileInput").files[0];
+            let password = document.getElementById("password").value;
+            if (!fileInput || !password) return alert("Select a file and enter a password");
+            
+            let reader = new FileReader();
+            reader.onload = function(e) {
+                let encrypted = CryptoJS.AES.encrypt(e.target.result, password).toString();
+                let blob = new Blob([encrypted], { type: "text/plain" });
+                let link = document.getElementById("downloadEncryptedLink");
+                link.href = URL.createObjectURL(blob);
+                link.download = fileInput.name + ".enc";
+                link.style.display = "block";
+                link.innerText = "Download Encrypted File";
+            };
+            reader.readAsText(fileInput);
+        }
+        
+        function shareUnencryptedText() {
+            let text = document.getElementById("text").value;
+            let blob = new Blob([text], { type: "text/plain" });
+            let link = document.getElementById("downloadUnencryptedLink");
+            link.href = URL.createObjectURL(blob);
+            link.download = "unencrypted_text.txt";
+            link.style.display = "block";
+            link.innerText = "Download Unencrypted Text";
+        }
+        
+        function shareUnencryptedFile() {
+            let fileInput = document.getElementById("fileInput").files[0];
+            if (!fileInput) return alert("Select a file to share");
+            
+            let reader = new FileReader();
+            reader.onload = function(e) {
+                let blob = new Blob([e.target.result], { type: fileInput.type });
+                let link = document.getElementById("downloadUnencryptedLink");
+                link.href = URL.createObjectURL(blob);
+                link.download = fileInput.name;
+                link.style.display = "block";
+                link.innerText = "Download Unencrypted File";
+            };
+            reader.readAsText(fileInput);
+        }
+        
+        function decryptText() {
+            let encryptedText = document.getElementById("encryptedInput").value;
+            let password = document.getElementById("decryptPassword").value;
+            let decrypted = CryptoJS.AES.decrypt(encryptedText, password).toString(CryptoJS.enc.Utf8);
+            document.getElementById("decryptedText").innerText = decrypted || "Invalid password or data";
+        }
+    </script>
+</body>
+</html>
